@@ -2,6 +2,7 @@ package org.deliveryfoodapp.Microservices.userServices;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.deliveryfoodapp.Microservices.ProducerEventsForUser;
 import org.deliveryfoodapp.Model.User;
 import org.deliveryfoodapp.broker.NameOfTopics;
 

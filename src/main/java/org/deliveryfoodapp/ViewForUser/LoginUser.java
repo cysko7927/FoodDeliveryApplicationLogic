@@ -64,7 +64,8 @@ public class LoginUser {
                 break;
             case "SHIPPINGMEN":
                 System.out.println("Welcome Shipping men " + username);
-                //Create Cli for ShippingMen todo
+                //Create Cli for ShippingMen
+                CliShippingMen.cliShippingMen(username);
                 break;
             case "ADMIN":
                 System.out.println("Welcome Admin " + username);

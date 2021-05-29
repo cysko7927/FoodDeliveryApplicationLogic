@@ -2,10 +2,9 @@ package org.deliveryfoodapp.ViewForUser;
 
 import javax.swing.*;
 
-public class CliCustomer
+public class CliShippingMen
 {
-
-    public static void cliCustomer(String nickname)
+    public static void cliShippingMen(String nickname)
     {
         boolean exit = false;
         int input;
@@ -17,37 +16,27 @@ public class CliCustomer
         //System.out.println("3)Show your data");
         //System.out.println("4)Exit");
 
-        Object[] options = {"Do an order",
-                "Show your orders",
-                "Show your data",
+        Object[] options = {"Notify a Shipping",
                 "Exit"};
 
         while (!exit)
         {
             input = JOptionPane.showOptionDialog(frame,
                     "Choose a operation",
-                    "Welcome customer " + nickname,
+                    "Welcome Shipping Men " + nickname,
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
                     null,
                     options,
-                    options[3]);
+                    options[1]);
 
             switch (input)
             {
                 case 0:
                     //CreateOrderView
-                    CreateOrderView.executeOrderViewCreation(nickname);
+                    CreateNotifyShippingView.showShippingNotCompleteView(nickname);
                     break;
                 case 1:
-                    //Shows orders with the CreateOrderView
-                    CreateOrderView.executeOrdersView(nickname);
-                    break;
-                case 2:
-                    //Show data User
-                    UserDataView.showUserDataView(nickname);
-                    break;
-                case 3:
                     return;
                 default:
                     JOptionPane.showMessageDialog(frame,"input is not valid");

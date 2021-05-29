@@ -1,17 +1,16 @@
-package org.deliveryfoodapp.Microservices.orderServices;
+package org.deliveryfoodapp.Microservices;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.deliveryfoodapp.Microservices.userServices.ProducerEventsForUser;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class ProducerEventsForOrder
+public class ProducerEventsForUser
 {
     private static final String defaultTopic = "topicA";
 
@@ -24,7 +23,7 @@ public class ProducerEventsForOrder
     private final KafkaProducer<String, String> producer;
     private final Properties props;
 
-    public ProducerEventsForOrder()
+    public ProducerEventsForUser()
     {
         props = new Properties(); //Creo le proprietà che deve avere il producer
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddr); //Indirizzo del server dove si trova il middleware
@@ -53,7 +52,4 @@ public class ProducerEventsForOrder
     {
         producer.close();
     }
-
-
-
 }

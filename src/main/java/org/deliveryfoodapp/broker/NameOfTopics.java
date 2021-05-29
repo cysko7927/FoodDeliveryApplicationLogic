@@ -11,4 +11,6 @@ public class NameOfTopics {
     public final static String notifyUser = "NotifyUser";
     public final static String showItem = "ShowItem";
     public final static String showUserData = "ShowUserData";
+    public final static String showShippingNotCompleted = "ShowShippingNotCompleted";
+    public final static String completeShipping = "CompleteShipping";
 }

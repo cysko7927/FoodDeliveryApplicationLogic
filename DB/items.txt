@@ -1,5 +1,5 @@
 apple,2
-pera,30
+pera,20
 anguria,20
 anguria1,20
 anguria2,31

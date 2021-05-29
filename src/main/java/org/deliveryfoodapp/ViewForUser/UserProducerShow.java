@@ -34,6 +34,20 @@ public class UserProducerShow
         producer = new KafkaProducer<>(props); //Definite le proprietà le passo al costruttore
     }
 
+    public void askUserData(String key,String value)
+    {
+        final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.showUserData, key, value); //Creo il record che deve inviare il producer
+        final Future<RecordMetadata> future = producer.send(record);//Dico al producer di inviare il record e ritorna il future
+
+        if (waitAck) {
+            try {
+                RecordMetadata ack = future.get(); //Aspetto l'ack
+                System.out.println("Ack for topic " + ack.topic() + ", partition " + ack.partition() + ", offset " + ack.offset());
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
     public void askItem(String key,String value)
     {
         final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.showItem, key, value); //Creo il record che deve inviare il producer
@@ -64,6 +78,21 @@ public class UserProducerShow
         }
     }
 
+    public void askShippingNotCompleted(String key,String value)
+    {
+        final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.showShippingNotCompleted, key, value); //Creo il record che deve inviare il producer
+        final Future<RecordMetadata> future = producer.send(record);//Dico al producer di inviare il record e ritorna il future
+
+        if (waitAck) {
+            try {
+                RecordMetadata ack = future.get(); //Aspetto l'ack
+                System.out.println("Ack for topic " + ack.topic() + ", partition " + ack.partition() + ", offset " + ack.offset());
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
     public void sendOrder(String nickname,String itemQuantity)
     {
         final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.orderCreation, nickname, itemQuantity); //Creo il record che deve inviare il producer
@@ -79,6 +108,20 @@ public class UserProducerShow
         }
     }
 
+    public void sendNotificationForShipping(String keyOrder,String nicknameCustomer,String nicknameShippingMen)
+    {
+        final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.completeShipping, nicknameShippingMen, keyOrder + ","+nicknameCustomer); //Creo il record che deve inviare il producer
+        final Future<RecordMetadata> future = producer.send(record);//Dico al producer di inviare il record e ritorna il future
+
+        if (waitAck) {
+            try {
+                RecordMetadata ack = future.get(); //Aspetto l'ack
+                System.out.println("Ack for topic " + ack.topic() + ", partition " + ack.partition() + ", offset " + ack.offset());
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
     public void sendItemNewOrUpdated(String nickname,String itemAndQuantity)
     {
         final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.updateQuantityItem, nickname, itemAndQuantity); //Creo il record che deve inviare il producer

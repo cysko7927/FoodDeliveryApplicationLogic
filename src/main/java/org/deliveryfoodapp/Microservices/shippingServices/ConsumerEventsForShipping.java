@@ -1,4 +1,4 @@
-package org.deliveryfoodapp.Microservices.orderServices;
+package org.deliveryfoodapp.Microservices.shippingServices;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -9,12 +9,10 @@ import org.deliveryfoodapp.broker.NameOfTopics;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-public class ConsumerEventsForOrder {
-
+public class ConsumerEventsForShipping {
     private static final String defaultGroupId = "groupA";
 
     private static final String serverAddr = "localhost:9092";
@@ -30,7 +28,7 @@ public class ConsumerEventsForOrder {
     /**
      * Create the consumer for Registration Event and subscribe it to the Broker
      */
-    public ConsumerEventsForOrder()
+    public ConsumerEventsForShipping()
     {
         this.groupId =  defaultGroupId;
 
@@ -46,18 +44,17 @@ public class ConsumerEventsForOrder {
 
         this.consumer = new KafkaConsumer<>(props);
         List<String> topics = new ArrayList<>();
-        topics.add(NameOfTopics.orderCreation);
-        topics.add(NameOfTopics.updateQuantityItem);
-        topics.add(NameOfTopics.showOrder);
-        topics.add(NameOfTopics.showItem);
+        topics.add(NameOfTopics.shippingCreation);
+        topics.add(NameOfTopics.showShippingNotCompleted);
+        topics.add(NameOfTopics.completeShipping);
         consumer.subscribe(topics);
     }
 
     /**
-     * Reads a bit of events about orders and items from the Broker
+     * Reads a bit of events about shipments from the Broker
      * @return The list of Events Available
      */
-    ConsumerRecords<String, String> readEventsOfOrdersOrItem()
+    ConsumerRecords<String, String> readEventsOfShipment()
     {
         return consumer.poll(Duration.of(5, ChronoUnit.MINUTES));
     }

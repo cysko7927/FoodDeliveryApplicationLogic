@@ -2,17 +2,14 @@ package org.deliveryfoodapp.Microservices.orderServices;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.deliveryfoodapp.Microservices.userServices.ConsumerEventsForUser;
-import org.deliveryfoodapp.Microservices.userServices.DBuser;
-import org.deliveryfoodapp.Microservices.userServices.ProducerEventsForUser;
-import org.deliveryfoodapp.Model.Order;
+import org.deliveryfoodapp.Microservices.ProducerEventsForUser;
 import org.deliveryfoodapp.broker.NameOfTopics;
 
 import java.io.IOException;
 
 public class OrderServices {
 
-    ProducerEventsForOrder producerEventsForOrder;
+    ProducerEventsForUser producerEventsForOrder;
     ConsumerEventsForOrder consumerEventsForOrder;
     DBitem dbItem;
     DBorder dbOrder;
@@ -20,13 +17,13 @@ public class OrderServices {
     public OrderServices()
     {
         this.consumerEventsForOrder = new ConsumerEventsForOrder();
-        this.producerEventsForOrder = new ProducerEventsForOrder();
+        this.producerEventsForOrder = new ProducerEventsForUser();
         this.dbItem = new DBitem();
         this.dbOrder = new DBorder();
     }
 
     public void executeServices() throws IOException, InterruptedException {
-        ConsumerRecords<String, String> events = consumerEventsForOrder.readEventsOfRegistration();
+        ConsumerRecords<String, String> events = consumerEventsForOrder.readEventsOfOrdersOrItem();
         for (final ConsumerRecord<String, String> record : events) //If there are events read from the broker
         {
             // Write in the DB the credentials of the user
@@ -84,7 +81,7 @@ public class OrderServices {
                     consumerEventsForOrder.commitState();//Commit to the Broker the state
                     //Invia evento creazione di spedizione annessa allo shippingServices
                     producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+nickuser,"OrderCreated","Your order has been registered");
-                    //producerEventsForOrder.sendRecordForATopic(NameOfTopics.shippingCreation,nickuser,String.valueOf(keyOrder));
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.shippingCreation,nickuser,String.valueOf(keyOrder));
 
                     break;
                 case NameOfTopics.updateQuantityItem://If a Admin asked to update the quantity of a item
