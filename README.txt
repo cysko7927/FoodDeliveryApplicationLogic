@@ -1,8 +1,8 @@
-# FoodDeliveryApplicationLogic
+FoodDeliveryApplicationLogic
 
 Guida all'Avvio:
 
-Innanzitutto bisogna avviare i brokers e inserire i Topics andando sulla cartella di kafka ed eseguire i seguenti script in ordine:\n
+Innanzitutto bisogna avviare i brokers e inserire i Topics andando sulla cartella di kafka ed eseguire i seguenti script in ordine:
 sh startAllBrokers.sh
 sh script.sh
 
