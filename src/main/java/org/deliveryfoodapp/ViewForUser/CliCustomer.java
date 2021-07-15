@@ -20,6 +20,7 @@ public class CliCustomer
         Object[] options = {"Do an order",
                 "Show your orders",
                 "Show your data",
+                "Set your Address",
                 "Exit"};
 
         while (!exit)
@@ -48,7 +49,12 @@ public class CliCustomer
                     UserDataView.showUserDataView(nickname);
                     break;
                 case 3:
-                    return;
+                    //Show a GUI to insert the new ShippingAddress
+                    UserDataView.setAddressView(nickname);
+                    break;
+                case 4:
+                    exit = true;
+                    break;
                 default:
                     JOptionPane.showMessageDialog(frame,"input is not valid");
             }

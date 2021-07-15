@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -33,7 +34,7 @@ public class ConsumerEventsForShipping {
         this.groupId =  defaultGroupId;
 
         this.props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddr);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, NetworkBroker.server0 + "," + NetworkBroker.server1+ "," + NetworkBroker.server2);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, String.valueOf(autoCommit));
 
@@ -62,5 +63,10 @@ public class ConsumerEventsForShipping {
     void commitState()
     {
         consumer.commitSync();
+    }
+
+    void closeConsumer()
+    {
+        consumer.close();
     }
 }

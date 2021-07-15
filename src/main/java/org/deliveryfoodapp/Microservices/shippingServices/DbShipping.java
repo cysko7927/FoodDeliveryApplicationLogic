@@ -15,6 +15,8 @@ public class DbShipping {
 
     private String pathFile = "/home/cysko7927/IdeaProjects/middleware_spark_complete/FoodDeliveryApplication/DB/shipment.txt";
 
+    static public String noShippingToNotify = "NoShippingToNotify";
+
     public String obtainAllShipmentNotCompleted()
     {
         List<String> list;
@@ -42,9 +44,12 @@ public class DbShipping {
             allShipment = allShipment + line + "\n";
         }
 
+        if (list.size() == 0)
+            return DbShipping.noShippingToNotify;
+
         return allShipment;
     }
-    public void addShipment(String nickname ,String key)
+    public void addShipment(String nickname ,String key,String address)
     {
         List<String> list= new ArrayList<>();
 
@@ -71,7 +76,7 @@ public class DbShipping {
             try
             {
                 fw = new FileWriter(pathFile, true);
-                fw.write(key+ "," + nickname + "," + "notDelivered" +"\n");//Write the shipment not delivered in the DB
+                fw.write(key+ "," + nickname + ","+ address +"," + "notDelivered" +"\n");//Write the shipment not delivered in the DB
                 fw.close();
 
 
@@ -97,10 +102,10 @@ public class DbShipping {
 
         try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain the line with the requested item
         {
-            //The line are like this: key,nickname,stateShipment
+            //The line are like this: key,nickname,address,stateShipment
 
             shipments = stream
-                    .filter(line -> line.contains(key+","+nickname+",notDelivered")) //Obtain the item requested
+                    .filter(line -> line.contains(key+","+nickname)) //Obtain the item requested
                     .collect(Collectors.toList());
 
         } catch (IOException e) {
@@ -122,7 +127,9 @@ public class DbShipping {
                         lineNumber = i;
                 }
 
-                lines.set(lineNumber, key+","+nickname+",Completed");//modify the line
+                String address = lines.get(lineNumber).split(",")[2];//Obtain the address
+
+                lines.set(lineNumber, key+","+nickname+","+address+",Completed");//modify the line
                 Files.write(path, lines, StandardCharsets.UTF_8);//Write all the lines in the files
 
             } catch (Exception e) {

@@ -1,0 +1,4 @@
+server0=localhost:9092
+server1=localhost:9093
+server2=localhost:9094
+authentication=localhost:9090

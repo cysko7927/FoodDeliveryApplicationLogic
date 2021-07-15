@@ -2,6 +2,8 @@ package org.deliveryfoodapp.ViewForUser;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.deliveryfoodapp.Microservices.orderServices.DBorder;
+import org.deliveryfoodapp.Microservices.shippingServices.DbShipping;
 import org.deliveryfoodapp.broker.TopicManager;
 
 import javax.swing.*;
@@ -9,19 +11,27 @@ import java.util.concurrent.ExecutionException;
 
 public class CreateNotifyShippingView
 {
-    static private TopicManager topicManager;
     static private UserProducerShow userProducer;
     static private UserConsumer userConsumer;
 
 
     public static void showShippingNotCompleteView(String nickname)
     {
+        JFrame frame = new JFrame();
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
 
-        createsManagers(nickname);
-
+        String nick= "";
+        String message= "";
         boolean done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
-        JFrame frame = new JFrame();
+
 
         while (!done)
         {
@@ -29,66 +39,76 @@ public class CreateNotifyShippingView
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
 
-        }
-        String[] selectedShipping = new String[2];
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the Shipping not notified from the server
-        {
-            String[] allShippingNotCompleted  = record.value().split(System.getProperty("line.separator"));
-            int selected = GuiForNotifyView.askIndexShippingToNotify(1,allShippingNotCompleted.length,record.value());
-            selectedShipping = allShippingNotCompleted[selected-1].split(",");
-        }
+                }
+            }
 
-
-        userProducer.sendNotificationForShipping(selectedShipping[0],selectedShipping[1],nickname);
-        eventsOfNotify = userConsumer.readEventsOfNotify();
-
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the message from the server
-        {
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
         }
 
         destroyManagers(nickname);
+
+        String[] selectedShipping = new String[2];
+
+            if (!message.equals(DbShipping.noShippingToNotify))//If there are shipping to notify
+            {
+                String[] allShippingNotCompleted  = message.split(System.getProperty("line.separator"));
+                int selected = GuiForNotifyView.askIndexShippingToNotify(1,allShippingNotCompleted.length,message);//Print the Shipping not notified from the server
+                selectedShipping = allShippingNotCompleted[selected-1].split(","); //And ask at the user to select a shipping
+
+                try {
+                    createsManagers(nickname);
+                } catch (Exception e) {
+                    destroyManagers(nickname);
+                    JOptionPane.showMessageDialog(frame,
+                            "Error of connection:Retry o check the connection");
+                    return;
+                }
+
+                userProducer.sendNotificationForShipping(selectedShipping[0],selectedShipping[1],nickname); //send notification to the broker
+                ConsumerRecords<String, String> eventsOfNotify1  = userConsumer.readEventsOfNotify();
+
+                for (ConsumerRecord<String, String> record: eventsOfNotify1) //Print the message from the server
+                {
+                    if (record.key().equals(nickname))
+                    {
+                        nick = record.key();
+                        message = record.value();
+                    }
+
+                }
+                destroyManagers(nickname);
+
+                JOptionPane.showMessageDialog(frame,
+                        "Message:"+message);
+            }
+            else //If there aren't shipping to notify
+            {
+                JOptionPane.showMessageDialog(frame,
+                        "There aren't shipping to notify");// Says to the user that there aren't shipping
+            }
+
 
     }
 
     private static void createsManagers(String nickname)//Create producer, consumers and Topic Manager
     {
-        topicManager = new TopicManager();
         userProducer = new UserProducerShow();
         userConsumer = new UserConsumer(nickname);
-
-        try {
-            topicManager.addTopicNotifyUser(nickname);
-        } catch (ExecutionException e)
-        {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
     private static void destroyManagers(String nickname)//Destroy producer, consumers and Topic Manager
     {
         userProducer.closeProducer();
         userConsumer.closeConsumer();
-        try {
-            topicManager.deleteTopicNotifyUser(nickname);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
 

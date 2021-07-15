@@ -4,7 +4,17 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.protocol.types.Field;
 import org.deliveryfoodapp.Microservices.ProducerEventsForUser;
+import org.deliveryfoodapp.Microservices.orderServices.ConsumerEventsForOrder;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
+import org.deliveryfoodapp.broker.TopicManager;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class ShippingServices
 {
@@ -12,10 +22,20 @@ public class ShippingServices
     ConsumerEventsForShipping consumerEventsForShipping;
     DbShipping dbShipping;
 
-    public ShippingServices() {
-        this.producerEventsForShipping = new ProducerEventsForUser();
-        this.consumerEventsForShipping = new ConsumerEventsForShipping();
+    public ShippingServices()
+    {
         this.dbShipping = new DbShipping();
+    }
+
+    public void createProducerAndConsumer()
+    {
+        if (this.consumerEventsForShipping !=null)
+            this.consumerEventsForShipping.closeConsumer();
+        if (this.producerEventsForShipping != null)
+            this.producerEventsForShipping.closeProducer();
+
+        this.consumerEventsForShipping = new ConsumerEventsForShipping();
+        this.producerEventsForShipping = new ProducerEventsForUser();
     }
 
     public void executeServices()
@@ -27,11 +47,12 @@ public class ShippingServices
             {
                 case NameOfTopics
                         .shippingCreation:
-                    //The record is like: key: nickname, value:KeyOrder
-                    String keyOrder = record.value();
+                    //The record is like: key: nickname, value:KeyOrder,Address
+                    String keyOrderAndAddress[] = record.value().split(",");
+
                     String nickname = record.key();
 
-                    dbShipping.addShipment(nickname,keyOrder);
+                    dbShipping.addShipment(nickname,keyOrderAndAddress[0],keyOrderAndAddress[1]);
 
 
                     consumerEventsForShipping.commitState();
@@ -44,12 +65,12 @@ public class ShippingServices
 
                     if (allShipment == "Error")
                     {
-                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser+record.key(),"Error in the Shipping services","impossible obtain all the shipment");
+                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), "impossible obtain all the shipment");
                         break;
                     }
 
                     consumerEventsForShipping.commitState();
-                    producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser+record.key(),"Here there are all the not completed shipment",allShipment);
+                    producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allShipment);
                     break;
 
                 case NameOfTopics
@@ -61,12 +82,13 @@ public class ShippingServices
                     int status = dbShipping.completeAShipment(keyAndNick[0],keyAndNick[1]);
 
                     if (status == 2)
-                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser+nickShippingMen,"Error in the Shipping services","error reading the DB");
+                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,nickShippingMen,"error reading the DB");
                     else if(status == 1)
-                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser+nickShippingMen,"Shipment yet Completed","Someone has notified the shipment meanwhile");
-                    else
-                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser+nickShippingMen,"Shipment notified and completed","the shipment "+keyAndNick[0] +" for user "+keyAndNick[1]+" has been notified");
-
+                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,nickShippingMen,"Someone has notified the shipment meanwhile");
+                    else {
+                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyCompletedShipping,keyAndNick[0],keyAndNick[1]);//Notify the orderService that a shipping is complete
+                        producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser, nickShippingMen, "the shipment " + keyAndNick[0] + " for user " + keyAndNick[1] + " has been notified");
+                    }
                     consumerEventsForShipping.commitState();
                     break;
 
@@ -74,13 +96,26 @@ public class ShippingServices
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
-        ShippingServices services = new ShippingServices();
+        List<String> servers = Files.lines(Paths.get("./config.txt")).collect(Collectors.toList());
+        NetworkBroker.server0 = servers.get(0).split("=")[1];
+        NetworkBroker.server1 = servers.get(1).split("=")[1];
+        NetworkBroker.server2 = servers.get(2).split("=")[1];
+
+        ShippingServices service = null;
+
+        service = new ShippingServices();
+
+        service.createProducerAndConsumer();
 
         while (true)
         {
-            services.executeServices();
+            try {
+                service.executeServices();
+            } catch (Exception e) { //If there are errors about Broker
+                service.createProducerAndConsumer();
+            }
         }
 
     }

@@ -1,5 +1,5 @@
-cysko,1234,CUSTOMER
+cysko,1234,CUSTOMER,Viale fratelli 100
 alice,1234,ADMIN
-alice1,1234,CUSTOMER
+alice1,1234,CUSTOMER,Viale Fratelli 23
 alice2,1234,CUSTOMER
 jack,1234,SHIPPINGMEN

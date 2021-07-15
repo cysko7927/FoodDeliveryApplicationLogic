@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,5 +93,30 @@ public class DBuser
 
         return list;
 
+    }
+
+    public int updateAddressShipping(String nickname,String address)
+    {
+        try {
+            Path path = Paths.get(pathFile);
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8); //Read and save all lines
+            int lineNumber = 0;
+
+            for (int i = 0; i < lines.size(); i++) //Obtanin the index of the line to modify the address
+            {
+                if (lines.get(i).contains(nickname+","))
+                    lineNumber = i;
+            }
+
+            String[] dataUser = lines.get(lineNumber).split(",");
+            lines.set(lineNumber, dataUser[0]+","+dataUser[1]+","+dataUser[2] +","+ address);//modify the line
+            Files.write(path, lines, StandardCharsets.UTF_8);//Write all the lines in the files
+
+        } catch (Exception e) {
+            System.out.println("Problem reading file Item.");
+            return 1;
+        }
+
+        return 0;
     }
 }

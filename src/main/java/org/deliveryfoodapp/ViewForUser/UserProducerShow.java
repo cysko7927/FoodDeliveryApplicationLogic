@@ -6,6 +6,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -27,9 +28,10 @@ public class UserProducerShow
     public UserProducerShow()
     {
         props = new Properties(); //Creo le proprietà che deve avere il producer
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddr); //Indirizzo del server dove si trova il middleware
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, NetworkBroker.server0 + "," + NetworkBroker.server1+ "," + NetworkBroker.server2); //Indirizzo del server dove si trova il middleware
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Setto la chiave
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Setto il valore
+        //props.put(ProducerConfig.ACKS_CONFIG, "all"); //Setto il valore
 
         producer = new KafkaProducer<>(props); //Definite le proprietà le passo al costruttore
     }
@@ -137,10 +139,25 @@ public class UserProducerShow
         }
     }
 
+    public void sendAddressCustomer(String nickname,String addressShipping)
+    {
+        final ProducerRecord<String, String> record = new ProducerRecord<>(NameOfTopics.updateAddressShippingUser, nickname, addressShipping); //Creo il record che deve inviare il producer
+        final Future<RecordMetadata> future = producer.send(record);//Dico al producer di inviare il record e ritorna il future
+
+        if (waitAck) {
+            try {
+                RecordMetadata ack = future.get(); //Aspetto l'ack
+                System.out.println("Ack for topic " + ack.topic() + ", partition " + ack.partition() + ", offset " + ack.offset());
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
     public void closeProducer()
     {
+        producer.flush();
         producer.close();
-
     }
 
 

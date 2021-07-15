@@ -15,8 +15,19 @@ public class HandleItemsView
 
     public static void showItemView(String nickname)
     {
-        createsManagers(nickname);
+        JFrame frame = new JFrame();
 
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
+        String nick= "";
+        String message= "";
         boolean done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
 
@@ -26,47 +37,58 @@ public class HandleItemsView
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
-
-        }
-
-        JFrame frame = new JFrame();
-
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the orders from the server
-        {
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+                }
+            }
 
         }
 
         destroyManagers(nickname);
+
+
+        JOptionPane.showMessageDialog(frame,
+                "Message:"+message);
+
+
     }
     public static void addItemView(String nickname)
     {
-        createsManagers(nickname);
+        JFrame frame = new JFrame();
 
         String item = "";
         int quantity;
         //Ask the item (new/existing)
-        JFrame frame = new JFrame();
-
+        String s = "";
         boolean done = false;
 
-        //Ask the name of the item to the user
-        String s = (String)JOptionPane.showInputDialog(
-                frame,
-                "Insert the name of the item (to add/to update)",
-                "Insert Item",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                "");
+        while (!done)
+        {
+            //Ask the name of the item to the user
+            s = (String)JOptionPane.showInputDialog(
+                    frame,
+                    "Insert the name of the item (to add/to update)",
+                    "Insert Item",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "");
 
-        //If a string was returned, save it.
-        if ((s != null) && (s.length() > 0)) {
-            item = s;
+            //If a string was returned, save it.
+            if ((s != null) && (s.length() > 0)) {
+                item = s;
+                done = true;
+            }
         }
 
+        done = false;
         //Ask the quantity
         while (!done)
         {
@@ -84,15 +106,36 @@ public class HandleItemsView
 
         quantity = Integer.parseInt(s); //Save quantity
 
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
         userProducer.sendItemNewOrUpdated(nickname,item+","+quantity); //Send the item and the quantity to the Server
 
+        String nick= "";
+        String message= "";
         done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
 
         eventsOfNotify = userConsumer.readEventsOfNotify(); //Wait the items of the Warehouse updated
 
         if (!eventsOfNotify.isEmpty())//If the response is not arrived
-            done = true;
+        {
+            for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+            {
+                if (record.key().equals(nickname))
+                {
+                    nick = record.key();
+                    message = record.value();
+                    done = true;
+                }
+            }
+        }
 
         while (!done)//Continue to ask at the server the items in the Warehouse
         {
@@ -100,56 +143,37 @@ public class HandleItemsView
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all the items
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+                }
+            }
 
         }
 
-        frame = new JFrame();
-
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the orders from the server
-        {
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
-
-        }
 
         destroyManagers(nickname);
+
+        JOptionPane.showMessageDialog(frame,
+                    "Message:"+"\n" + message);
+
     }
 
     private static void createsManagers(String nickname)//Create producer, consumers and Topic Manager
     {
-        topicManager = new TopicManager();
         userProducer = new UserProducerShow();
         userConsumer = new UserConsumer(nickname);
-
-        try {
-            topicManager.addTopicNotifyUser(nickname);
-        } catch (ExecutionException e)
-        {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
     private static void destroyManagers(String nickname)//Destroy producer, consumers and Topic Manager
     {
         userProducer.closeProducer();
         userConsumer.closeConsumer();
-        try {
-            topicManager.deleteTopicNotifyUser(nickname);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 }

@@ -2,6 +2,7 @@ package org.deliveryfoodapp.ViewForUser;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.protocol.types.Field;
 import org.deliveryfoodapp.broker.TopicManager;
 
 import javax.swing.*;
@@ -15,8 +16,19 @@ public class UserDataView {
 
     public static void showUserDataView(String nickname)
     {
-        createsManagers(nickname);
+        JFrame frame = new JFrame();
 
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
+        String nick = "";
+        String message = "";
         boolean done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
 
@@ -26,56 +38,86 @@ public class UserDataView {
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
-
-        }
-
-        JFrame frame = new JFrame();
-
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the orders from the server
-        {
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))//If there is the response message
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+                }
+            }
 
         }
 
         destroyManagers(nickname);
+
+
+        //Print the data of the user from the server
+        JOptionPane.showMessageDialog(frame,
+                    "Message"+"\n" + message);
+
+
+    }
+
+    public static void setAddressView(String nickname)
+    {
+        JFrame frame = new JFrame();
+
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
+        String nick = "";
+        String message = "";
+        boolean done = false;
+        ConsumerRecords<String, String> eventsOfNotify = null;
+        String address = InputReader.obtainAnAddress();
+
+        while (!done)
+        {
+            userProducer.sendAddressCustomer(nickname,address);//Ask the items from the Server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+
+            if (!eventsOfNotify.isEmpty())
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))//If there is the response message
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+                }
+            }
+
+        }
+
+
+        destroyManagers(nickname);
+
+        JOptionPane.showMessageDialog(frame,
+                "Message"+"\n" + message);
     }
 
     private static void createsManagers(String nickname)//Create producer, consumers and Topic Manager
     {
-        topicManager = new TopicManager();
         userProducer = new UserProducerShow();
         userConsumer = new UserConsumer(nickname);
-
-        try {
-            topicManager.addTopicNotifyUser(nickname);
-        } catch (ExecutionException e)
-        {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
     private static void destroyManagers(String nickname)//Destroy producer, consumers and Topic Manager
     {
         userProducer.closeProducer();
         userConsumer.closeConsumer();
-        try {
-            topicManager.deleteTopicNotifyUser(nickname);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
+
     }
 }

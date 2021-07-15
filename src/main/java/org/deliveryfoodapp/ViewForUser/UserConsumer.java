@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -33,10 +34,10 @@ public class UserConsumer
     public UserConsumer(String nickname)
     {
         this.groupId =  defaultGroupId;
-        this.topic = NameOfTopics.notifyUser+nickname;
+        this.topic = NameOfTopics.notifyUser;
 
         this.props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddr);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, NetworkBroker.server0 + "," + NetworkBroker.server1+ "," + NetworkBroker.server2);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, String.valueOf(autoCommit));
 
@@ -57,7 +58,7 @@ public class UserConsumer
      */
     ConsumerRecords<String, String> readEventsOfNotify()
     {
-        return consumer.poll(Duration.of(5, ChronoUnit.SECONDS));
+        return consumer.poll(Duration.of(15, ChronoUnit.SECONDS));
     }
 
     public void commitState()

@@ -1,18 +1,17 @@
 package org.deliveryfoodapp.ViewForUser;
 
+import org.deliveryfoodapp.broker.NetworkBroker;
+
 public class Connect {
-    private String USERNAME = "java";
-    private String PASSWORD = "java";
-    private int PORT = 9090;
+
+    private int PORT;
     private String HOSTNAME = "localhost";
 
-    public String getUsername(){
-        return this.USERNAME;
-    }
+    public Connect()
+    {
+        PORT = Integer.parseInt(NetworkBroker.serverAuth.split(":")[1]);
+        HOSTNAME = NetworkBroker.serverAuth.split(":")[0];
 
-    public String getPassword(){
-
-        return this.PASSWORD;
     }
 
     public int getPort(){

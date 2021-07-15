@@ -76,4 +76,34 @@ public class InputReader
         return Integer.parseInt(str);
 
     }
+
+    public static String obtainAnAddress()
+    {
+
+        JFrame frame = new JFrame();
+        String str= (String) JOptionPane.showInputDialog(
+                frame,
+                "Insert the address",
+                "Modify address",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                "");
+
+        while(!(str != null && !str.contains(",")))
+        {
+            JOptionPane.showMessageDialog(frame,
+                    "Address is not valid");
+            str = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Insert the address",
+                    "Modify address",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "");
+        }
+
+        return str;
+    }
 }

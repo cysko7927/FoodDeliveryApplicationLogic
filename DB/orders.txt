@@ -1,8 +1,7 @@
-1,cysko,notDelivered,apple,2
-2,cysko,notDelivered,pere,4
-3,cysko,notDelivered,anguria3,10,anguria1,10,anguria,10,
-4,cysko,notDelivered,apple,2,
-5,cysko,notDelivered,pera,10,anguria1,10,
-1,alice1,notDelivered,anguria1,10,anguria2,10,anguria,10,anguria3,10,
-6,cysko,notDelivered,pera,5,anguria,10,
-7,cysko,notDelivered,pera,10,
+1,cysko,notDelivered,pera,10,
+2,cysko,notDelivered,apple,2,
+3,cysko,Completed,pera,5,
+4,cysko,Completed,Viale Giuseppe 123,pera,10,anguria,10,
+5,cysko,Completed,Viale Giuseppe 123,pera,5,
+6,cysko,Completed,Viale fratelli 100,apple,5,
+7,cysko,Completed,Viale fratelli 100,anguria,5,

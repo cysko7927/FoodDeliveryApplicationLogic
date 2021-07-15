@@ -1,12 +1,24 @@
 package org.deliveryfoodapp.Microservices.userServices;
 
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.deliveryfoodapp.Microservices.ProducerEventsForUser;
+import org.deliveryfoodapp.Microservices.orderServices.ConsumerEventsForOrder;
 import org.deliveryfoodapp.Model.User;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
+import org.deliveryfoodapp.broker.TopicManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class UserServices
 {
@@ -14,10 +26,19 @@ public class UserServices
     ConsumerEventsForUser consumerEventsForUser;
     DBuser dbUser;
 
-    public UserServices(ConsumerEventsForUser consumerEventsForUser)
+    public void createProducerAndConsumer()
     {
+        if (this.consumerEventsForUser !=null)
+            this.consumerEventsForUser.closeConsumer();
+        if (this.producerEventsForUser != null)
+            this.producerEventsForUser.closeProducer();
+
         this.consumerEventsForUser = new ConsumerEventsForUser();
         this.producerEventsForUser = new ProducerEventsForUser();
+    }
+
+    public UserServices()
+    {
         this.dbUser = new DBuser();
     }
 
@@ -40,13 +61,28 @@ public class UserServices
                     break;
                 case NameOfTopics.showUserData:
                     //The record is like: key: nickname value:
-                    //Send the response message
+
                     String nickuser = record.key();
 
                     List<String> result = dbUser.searchUser(nickuser);
 
+                    //Send the response message
+                    producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), result.get(0));
+                    break;
+                case NameOfTopics.updateAddressShippingUser:
+                    //The record is like: key: nickname value: address
 
-                    producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser+nickuser,"Your Credentials",result.get(0));
+                    int outcome = dbUser.updateAddressShipping(record.key(),record.value());
+
+                    if (outcome == 1)
+                    {
+                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Error in the server");
+                    }
+                    else
+                    {
+                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Address added correctly");
+                    }
+
                     break;
             }
 
@@ -55,15 +91,29 @@ public class UserServices
         consumerEventsForUser.commitState();//Commit to the Broker the state
     }
 
-    public static void main(String[] args)
-    {
-        UserServices userServices = new UserServices(new ConsumerEventsForUser());
+    public static void main(String[] args) throws IOException {
+        List<String> servers = Files.lines(Paths.get("./config.txt")).collect(Collectors.toList());
+        NetworkBroker.server0 = servers.get(0).split("=")[1];
+        NetworkBroker.server1 = servers.get(1).split("=")[1];
+        NetworkBroker.server2 = servers.get(2).split("=")[1];
+        UserServices userServices = null;
+
+        userServices = new UserServices();
+
+        userServices.createProducerAndConsumer();
 
         while (true)
         {
-            userServices.executeServices();
+            try {
+                userServices.executeServices();
+            } catch (Exception e) { //If there are errors about Broker
+                userServices.createProducerAndConsumer();
+            }
+
         }
 
     }
 
 }
+
+

@@ -13,4 +13,6 @@ public class NameOfTopics {
     public final static String showUserData = "ShowUserData";
     public final static String showShippingNotCompleted = "ShowShippingNotCompleted";
     public final static String completeShipping = "CompleteShipping";
+    public final static String notifyCompletedShipping = "NotifyCompleteShipping";
+    public final static String updateAddressShippingUser = "UpdateAddressShippingUser";
 }

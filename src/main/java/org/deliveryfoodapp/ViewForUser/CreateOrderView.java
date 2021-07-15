@@ -3,25 +3,58 @@ package org.deliveryfoodapp.ViewForUser;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.protocol.types.Field;
+import org.deliveryfoodapp.broker.NetworkBroker;
 import org.deliveryfoodapp.broker.TopicManager;
 
 import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * todo: put the check address shipping in the order Creation
+ */
+
 public class CreateOrderView
 {
-    static private TopicManager topicManager;
     static private UserProducerShow userProducer;
     static private UserConsumer userConsumer;
     static public void executeOrderViewCreation(String nickname)
     {
-        createsManagers(nickname);
-
-        boolean done = false;
         JFrame frame = new JFrame();
 
+        try {
+            createsManagers(nickname);
+        } catch (ExecutionException e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        } catch (InterruptedException e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
+        String address = obtainAddressShipping(nickname); //Check if the user has an address for shipping
+
+        if (address == "") //If the user has not an address for Shipping
+        {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Dear user:"+ nickname +"You didn't set an address, impossible to do an order");
+            return; //Stop creation order
+
+        }
+
+
+
+        boolean done = false;
+
+
         ConsumerRecords<String, String> eventsOfNotify = null;
+        String nick = "";
+        String message = "";
 
         while (!done)
         {
@@ -29,16 +62,33 @@ public class CreateOrderView
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))//If there is the response message
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+
+                }
+            }
 
         }
 
-        String[][] allItems = new String[1][1];
+        destroyManagers(nickname);//Free the resource for now
 
-        for (ConsumerRecord<String, String> record: eventsOfNotify)
+        if (message.equals("A quantity of a product is not valid"))
         {
-            allItems = obtainAllItemsAndQuantity(record.value());
+            JOptionPane.showMessageDialog(frame,
+                    "Message:"+"\n"+message);
+            return;
         }
+        String[][] allItems;
+
+        allItems = obtainAllItemsAndQuantity(message);
+
 
         done = false;
         String allitemString = "";
@@ -91,29 +141,53 @@ public class CreateOrderView
         {
             itemsForOrderString = itemsForOrderString + item + "," + itemsForOrder.get(item) +"\n";
         }
+
+        try
+        {
+            createsManagers(nickname); //Starts again the manager
+        }
+        catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
+
         //Send the orders to the Producer
-        userProducer.sendOrder(nickname,itemsForOrderString);
+        userProducer.sendOrder(nickname,address + "\n" + itemsForOrderString);
         eventsOfNotify = userConsumer.readEventsOfNotify(); //Wait the Notify from the Server
 
         for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the message from the server
         {
-            System.out.println(record.key());
-            System.out.println(record.value());
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
+            if (record.key().equals(nickname))
+            {
+                nick = record.key();
+                message = record.value();
+            }
+
         }
 
-
         destroyManagers(nickname);
+        JOptionPane.showMessageDialog(frame,
+                "Message:"+"\n"+message);
 
     }
 
     static public void executeOrdersView(String nickname)
     {
+        JFrame frame = new JFrame();
 
-        createsManagers(nickname);
+        try {
+            createsManagers(nickname);
+        } catch (Exception e) {
+            destroyManagers(nickname);
+            JOptionPane.showMessageDialog(frame,
+                    "Error of connection:Retry o check the connection");
+            return;
+        }
 
-
+        String nick= "";
+        String message= "";
         boolean done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
 
@@ -123,58 +197,74 @@ public class CreateOrderView
             eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
 
             if (!eventsOfNotify.isEmpty())
-                done = true;
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname))
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
 
+                }
+            }
         }
-
-        JFrame frame = new JFrame();
-
-        for (ConsumerRecord<String, String> record: eventsOfNotify) //Print the orders from the server
-        {
-            JOptionPane.showMessageDialog(frame,
-                    record.key()+"\n" + record.value());
-
-        }
-
 
         destroyManagers(nickname);
+
+        JOptionPane.showMessageDialog(frame,
+                "Here there are your orders:" +"\n" + message);
+
     }
 
-    private static void createsManagers(String nickname)//Create producer, consumers and Topic Manager
+    //Ask to the server the data of a user and retrieves the Address if exists
+    private static String obtainAddressShipping(String nickname)
     {
-        topicManager = new TopicManager();
+        String nick= "";
+        String message= "";
+        boolean done = false;
+        ConsumerRecords<String, String> eventsOfNotify = null;
+
+        while (!done)
+        {
+            userProducer.askUserData(nickname,"");//Ask the data User from the Server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the records
+
+            if (!eventsOfNotify.isEmpty())
+            {
+                for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
+                {
+                    if (record.key().equals(nickname)) //Take only the record for the user
+                    {
+                        nick = record.key();
+                        message = record.value();
+                        done = true;
+                    }
+
+                }
+            }
+        }
+
+        String[] dataUser = message.split(",");//obtain the data
+
+        if (dataUser.length == 4) //If there is the address
+            return dataUser[3];//returns it
+
+        return "";
+    }
+
+    private static void createsManagers(String nickname) throws ExecutionException, InterruptedException//Create producer, consumers and Topic Manager
+    {
         userProducer = new UserProducerShow();
         userConsumer = new UserConsumer(nickname);
 
-        try {
-            topicManager.addTopicNotifyUser(nickname);
-        } catch (ExecutionException e)
-        {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
     private static void destroyManagers(String nickname)//Destroy producer, consumers and Topic Manager
     {
         userProducer.closeProducer();
         userConsumer.closeConsumer();
-        try {
-            topicManager.deleteTopicNotifyUser(nickname);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Errore nel topic Manager");
-            return;
-        }
     }
 
     private static String[][] obtainAllItemsAndQuantity(String allItems)

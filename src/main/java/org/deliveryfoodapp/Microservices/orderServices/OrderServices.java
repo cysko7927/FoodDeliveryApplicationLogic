@@ -4,23 +4,42 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.deliveryfoodapp.Microservices.ProducerEventsForUser;
 import org.deliveryfoodapp.broker.NameOfTopics;
+import org.deliveryfoodapp.broker.NetworkBroker;
+import org.deliveryfoodapp.broker.TopicManager;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 
 public class OrderServices {
 
-    ProducerEventsForUser producerEventsForOrder;
-    ConsumerEventsForOrder consumerEventsForOrder;
+    ProducerEventsForUser producerEventsForOrder = null;
+    ConsumerEventsForOrder consumerEventsForOrder = null;
     DBitem dbItem;
     DBorder dbOrder;
 
-    public OrderServices()
-    {
-        this.consumerEventsForOrder = new ConsumerEventsForOrder();
-        this.producerEventsForOrder = new ProducerEventsForUser();
+    public OrderServices() {
         this.dbItem = new DBitem();
         this.dbOrder = new DBorder();
+
     }
+
+    public void createProducerAndConsumer()
+    {
+        if (this.consumerEventsForOrder !=null)
+            this.consumerEventsForOrder.closeConsumer();
+        if (this.producerEventsForOrder != null)
+            this.producerEventsForOrder.closeProducer();
+
+        this.consumerEventsForOrder = new ConsumerEventsForOrder();
+        this.producerEventsForOrder = new ProducerEventsForUser();
+    }
+
+
 
     public void executeServices() throws IOException, InterruptedException {
         ConsumerRecords<String, String> events = consumerEventsForOrder.readEventsOfOrdersOrItem();
@@ -31,20 +50,20 @@ public class OrderServices {
             {
                 case NameOfTopics
                         .orderCreation:
-                    //The record is like: key: nickname value:item1,quantity\nitem2,quantity\n.....
+                    //The record is like: key: nickname value:address\nitem1,quantity\nitem2,quantity\n.....
                     //Controllare se gli item sono disponibili
                     String nickuser = record.key();
                     boolean orderIsValid = true;
 
-                    //The value of the record is a string like this: item1,quantity\nitem2,quantity\n.....
+                    //The value of the record is a string like this: address\nitem1,quantity\nitem2,quantity\n.....
                     String[] lines = record.value().split(System.getProperty("line.separator"));//Read the values of the record
 
-                    for (int i = 0; i< lines.length;i++)
+                    for (int i = 1; i< lines.length;i++)
                     {
                         String[] itemAndQuantity = lines[i].split(",");
                         int quantity = dbItem.obtainQuantity(itemAndQuantity[0]);
 
-                        if (!(quantity > Integer.parseInt(itemAndQuantity[1]))) //If there aren't enough item for the purchase
+                        if (!(quantity >= Integer.parseInt(itemAndQuantity[1]))) //If there aren't enough item for the purchase
                         {
                             orderIsValid = false;//Change the state of the order
                         }
@@ -53,14 +72,14 @@ public class OrderServices {
                     if (!orderIsValid)//If the order is not valid
                     {
                         //Mandare messaggio di errore all'utente
-                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+nickuser,"Order is not valid","A quantity of a product is not valid");
+                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,nickuser,"A quantity of a product is not valid");
 
                         break;//Interrupt the proccessing for this record
                     }
 
                     //Validifica e salva ordine nel DB
 
-                    for (int i = 0; i< lines.length;i++) //Reduce the quantity of the items from the magazine
+                    for (int i = 1; i< lines.length;i++) //Reduce the quantity of the items from the magazine
                     {
                         String[] itemAndQuantity = lines[i].split(",");
                         int quantity = dbItem.obtainQuantity(itemAndQuantity[0]); //Obtain quantity in the Warehouse
@@ -72,16 +91,15 @@ public class OrderServices {
 
                     if (keyOrder == 0)
                     {
-                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+nickuser,"Error in the orderServices","Error in accessing the DB");
+                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,nickuser,"Error in accessing the DB");
                         break;
                     } //If there were errors in the DB to write the order then generates exception and send a message to the user
 
 
-
-                    consumerEventsForOrder.commitState();//Commit to the Broker the state
-                    //Invia evento creazione di spedizione annessa allo shippingServices
-                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+nickuser,"OrderCreated","Your order has been registered");
-                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.shippingCreation,nickuser,String.valueOf(keyOrder));
+                    //Sending message to notify the correct Creation of the order
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,nickuser,"Your order has been registered");
+                    //Sending a record for the shipping Address to create the shipping (contains the nick, keyorder and Address shipping
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.shippingCreation,nickuser,keyOrder+ ","+lines[0]);
 
                     break;
                 case NameOfTopics.updateQuantityItem://If a Admin asked to update the quantity of a item
@@ -96,13 +114,12 @@ public class OrderServices {
                     if (allItem == "Error") //If there was an error in obtain all items
                     {
                         //Send a message of Error
-                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+record.key(),"Error in the orderServices","impossible modify quantity");
+                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"impossible modify quantity");
                         break;
                     }
 
                     //Crea evento notifyUser con gli item aggiornati
-                    consumerEventsForOrder.commitState();//Commit to the Broker the state
-                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser +record.key(),"item quantity added",allItem);
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allItem);
                     break;
                 case NameOfTopics.showOrder: //if a customer asked to see his order
                     //The record is like: key: nickname value:
@@ -112,12 +129,11 @@ public class OrderServices {
                     String allOrders = dbOrder.obtainAllOrdersOfAUser(record.key());
 
                     if (allOrders == "Error") {
-                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser + record.key(), "Error in the orderServices", "impossible obtain all the orders");
+                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), "impossible obtain all the orders");
                         break;
                     }
 
-                    consumerEventsForOrder.commitState();//Commit to the Broker the state
-                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser +record.key(),"Here are your orders",allOrders);
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allOrders);
                     break;
                 case NameOfTopics.showItem:
                     //Crea Evento notifyUser con tutti gli item da inviare all'admin che ne ha fatto richiesta
@@ -126,29 +142,76 @@ public class OrderServices {
                     if (allItem1 == "Error") //If there was an error in obtain all items
                     {
                         //Send a message of Error
-                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser+record.key(),"Error in the orderServices","impossible modify quantity");
+                        producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), "impossible modify quantity");
                         break;
                     }
 
                     //Else
-                    consumerEventsForOrder.commitState();//Commit to the Broker the state
-                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser +record.key(),"Here there are all the items",allItem1);
+                    producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), allItem1);
                     break;
+
+                case NameOfTopics.notifyCompletedShipping:
+                    //Record: key=keyOrder,value = nickCustomer
+
+                    dbOrder.changeStateOrder(record.key(), record.value());
+
+                    break;
+
             }
 
 
 
         }
+        consumerEventsForOrder.commitState();//Commit to the Broker the state
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        OrderServices service = new OrderServices();
+    public static void main(String[] args) throws IOException {
 
-        while (true){
+        List<String> servers = Files.lines(Paths.get("./config.txt")).collect(Collectors.toList());
+        NetworkBroker.server0 = servers.get(0).split("=")[1];
+        NetworkBroker.server1 = servers.get(1).split("=")[1];
+        NetworkBroker.server2 = servers.get(2).split("=")[1];
 
-            service.executeServices();
+        OrderServices service = null;
 
 
+        service = new OrderServices();
+
+        /*boolean connection_done = false;
+
+        try {
+            //service.createTopics();
+            connection_done = true;
+        } catch (ExecutionException e) {
+            NetworkBroker.switchServer();
+        } catch (InterruptedException e) {
+            NetworkBroker.switchServer();
+        }
+
+        if (!connection_done)
+        {
+            try {
+                //service.createTopics();
+                connection_done = true;
+            } catch (ExecutionException e) {
+                System.out.println("Servers not Available");
+                return;
+            } catch (InterruptedException e) {
+                System.out.println("Servers not Available");
+                return;
+            }
+        }
+        */
+        service.createProducerAndConsumer();
+
+
+        while (true)
+        {
+            try {
+                service.executeServices();
+            } catch (Exception e) { //If there are errors about Broker
+                service.createProducerAndConsumer();
+            }
         }
     }
 }

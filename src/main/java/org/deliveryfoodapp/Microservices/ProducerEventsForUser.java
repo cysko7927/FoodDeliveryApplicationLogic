@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.deliveryfoodapp.broker.NetworkBroker;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -26,7 +27,7 @@ public class ProducerEventsForUser
     public ProducerEventsForUser()
     {
         props = new Properties(); //Creo le proprietà che deve avere il producer
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddr); //Indirizzo del server dove si trova il middleware
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, NetworkBroker.server0 + "," + NetworkBroker.server1+ "," + NetworkBroker.server2); //Indirizzo del server dove si trova il middleware
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Setto la chiave
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Setto il valore
 
@@ -50,6 +51,7 @@ public class ProducerEventsForUser
 
     public void closeProducer()
     {
+        producer.flush();
         producer.close();
     }
 }
