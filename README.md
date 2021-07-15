@@ -2,7 +2,7 @@
 
 Guida all'Avvio:
 
-Innanzitutto bisogna avviare i brokers e inserire i Topics andando sulla cartella di kafka ed eseguire i seguenti script in ordine:
+Innanzitutto bisogna avviare i brokers e inserire i Topics andando sulla cartella di kafka ed eseguire i seguenti script in ordine:\n
 sh startAllBrokers.sh
 sh script.sh
 
