@@ -3,7 +3,10 @@ FoodDeliveryApplicationLogic
 Guida all'Avvio:
 
 Innanzitutto bisogna avviare i brokers e inserire i Topics andando sulla cartella di kafka ed eseguire i seguenti script in ordine:
-sh startAllBrokers.sh
+sh startZookeper.sh
+sh startServer0.sh
+sh startServer1.sh
+sh startServer2.sh
 sh script.sh
 
 Se si vuole controllare se i topic sono stati inseriti correttamente eseguire lo script:ViewTopics.sh
