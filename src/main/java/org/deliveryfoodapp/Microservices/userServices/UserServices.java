@@ -37,8 +37,7 @@ public class UserServices
         this.producerEventsForUser = new ProducerEventsForUser();
     }
 
-    public UserServices()
-    {
+    public UserServices() throws IOException {
         this.dbUser = new DBuser();
     }
 
@@ -106,7 +105,8 @@ public class UserServices
         {
             try {
                 userServices.executeServices();
-            } catch (Exception e) { //If there are errors about Broker
+            }
+            catch (Exception e) { //If there are errors about Broker
                 userServices.createProducerAndConsumer();
             }
 

@@ -14,11 +14,18 @@ public class DBorder
 {
     private String pathFile = "/home/cysko7927/IdeaProjects/middleware_spark_complete/FoodDeliveryApplication/DB/orders.txt";
 
+
+    public DBorder() throws IOException {
+        List<String> lines = Files.lines(Paths.get("./configDBorderAndItem.txt")).collect(Collectors.toList());
+        this.pathFile = lines.get(1);
+    }
+
     public String  obtainAllOrdersOfAUser(String nickname)
     {
         List<String> list;
 
-        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain all the row with the orders of the user with the nickname in input
+        //Obtain all the row with the orders of the user with the nickname in input
+        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))
         {
 
 
@@ -37,7 +44,7 @@ public class DBorder
 
         for (String line:list)
         {
-            allOrder = allOrder + line + "\n";
+            allOrder = allOrder + line + "\n"; //Creates the string with all the orders
         }
 
         return allOrder;
@@ -73,7 +80,7 @@ public class DBorder
             try
             {
                 fw = new FileWriter(pathFile, true);
-                fw.write(index+ "," + nickname + "," + "notDelivered" +"," + addressAndAllItems  + "\n");//Write the credentials in the DB
+                fw.write(index+ "," + nickname + "," + "notDelivered" +"," + addressAndAllItems  + "\n");//Write the attributes of the order in the DB
                 fw.close();
 
 
@@ -94,12 +101,12 @@ public class DBorder
     {
         List<String> orders;
 
-        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain the line with the requested item
+        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain the line with the requested order
         {
             //The line are like this: keyOrder,nickUser,....
 
             orders = stream
-                    .filter(line -> line.contains(keyOrder+","+nickUser+",")) //Obtain the item requested
+                    .filter(line -> line.contains(keyOrder+","+nickUser+",")) //Obtain the order requested
                     .collect(Collectors.toList());
 
         } catch (IOException e) {
@@ -116,7 +123,7 @@ public class DBorder
             List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8); //Read and save all lines
             int lineNumber = 0;
 
-            for (int i = 0; i < lines.size(); i++) //Obtanin the index of the line to modify to update the quantity of the item
+            for (int i = 0; i < lines.size(); i++) //Obtanin the index of the line to modify to update the state of the order
             {
                 if (lines.get(i).contains(keyOrder+","+nickUser+","))
                     lineNumber = i;

@@ -22,7 +22,7 @@ public class OrderServices {
     DBitem dbItem;
     DBorder dbOrder;
 
-    public OrderServices() {
+    public OrderServices() throws IOException {
         this.dbItem = new DBitem();
         this.dbOrder = new DBorder();
 

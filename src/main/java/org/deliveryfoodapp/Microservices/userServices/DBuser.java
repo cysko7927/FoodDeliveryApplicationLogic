@@ -1,6 +1,8 @@
 package org.deliveryfoodapp.Microservices.userServices;
 
 
+import org.deliveryfoodapp.broker.NetworkBroker;
+
 import java.io.IOException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -18,12 +20,12 @@ public class DBuser
 {
     private String pathFile = "/home/cysko7927/IdeaProjects/middleware_spark_complete/FoodDeliveryApplication/DB/user.txt";
 
-    /**
-     * Write the credentials of the new user if there aren't in the DB
-     * @param username
-     * @param password
-     * @param type
-     */
+
+    public DBuser() throws IOException {
+        List<String> lines = Files.lines(Paths.get("./configDBuser.txt")).collect(Collectors.toList());
+        this.pathFile = lines.get(0);
+    }
+
     public void writeCredentialsUser(String username,String password,String type)
     {
         List<String> list;
@@ -99,7 +101,7 @@ public class DBuser
     {
         try {
             Path path = Paths.get(pathFile);
-            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8); //Read and save all lines
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8); //Read all lines of the file
             int lineNumber = 0;
 
             for (int i = 0; i < lines.size(); i++) //Obtanin the index of the line to modify the address

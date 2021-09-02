@@ -17,11 +17,16 @@ public class DbShipping {
 
     static public String noShippingToNotify = "NoShippingToNotify";
 
+    public DbShipping() throws IOException {
+        List<String> lines = Files.lines(Paths.get("./configDBshipment.txt")).collect(Collectors.toList());
+        this.pathFile = lines.get(0);
+    }
+
     public String obtainAllShipmentNotCompleted()
     {
         List<String> list;
 
-        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain all the row with the orders of the user with the nickname in input
+        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain all the row with the shipment not completed
         {
 
 
@@ -41,10 +46,10 @@ public class DbShipping {
 
         for (String line:list)
         {
-            allShipment = allShipment + line + "\n";
+            allShipment = allShipment + line + "\n"; //Create the string with all the shipment not completed
         }
 
-        if (list.size() == 0)
+        if (list.size() == 0) //If there aren't no shipping to notify
             return DbShipping.noShippingToNotify;
 
         return allShipment;
@@ -100,12 +105,12 @@ public class DbShipping {
     {
         List<String> shipments;
 
-        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain the line with the requested item
+        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Obtain the line with the requested shipment
         {
             //The line are like this: key,nickname,address,stateShipment
 
             shipments = stream
-                    .filter(line -> line.contains(key+","+nickname)) //Obtain the item requested
+                    .filter(line -> line.contains(key+","+nickname))
                     .collect(Collectors.toList());
 
         } catch (IOException e) {
@@ -114,7 +119,7 @@ public class DbShipping {
             return 2; //Error reading DB
         }
 
-        if (shipments.size() == 1) { //If the item requested is in the DB
+        if (shipments.size() == 1) { //If the shipment requested is in the DB
 
             try {
                 Path path = Paths.get(pathFile);

@@ -16,10 +16,15 @@ public class DBitem {
 
     private String pathFile = "/home/cysko7927/IdeaProjects/middleware_spark_complete/FoodDeliveryApplication/DB/items.txt";
 
+    public DBitem() throws IOException {
+        List<String> lines = Files.lines(Paths.get("./configDBorderAndItem.txt")).collect(Collectors.toList());
+        this.pathFile = lines.get(0);
+    }
+
     public String obtainAllitems()
     {
         try {
-            return Files.readString(Paths.get(pathFile));
+            return Files.readString(Paths.get(pathFile));//Read all the file and return all the string;
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -30,7 +35,7 @@ public class DBitem {
     {
         List<String> items;
 
-        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))//Check if there is a user with the username in input
+        try (Stream<String> stream = Files.lines(Paths.get(pathFile)))
         {
             //The line are like this: itemx,quantity
 
@@ -47,7 +52,7 @@ public class DBitem {
 
         String[] itemAndQuantity = items.get(0).split(",");//Split item and quantity
 
-        return Integer.parseInt(itemAndQuantity[1]);
+        return Integer.parseInt(itemAndQuantity[1]);// returns quantity
     }
 
     public void modifyQuantity(String item,int quantity) {
@@ -80,7 +85,7 @@ public class DBitem {
                         lineNumber = i;
                 }
 
-                lines.set(lineNumber, item + "," + quantity);//modify the line
+                lines.set(lineNumber, item + "," + quantity);//modify the line with the new quantity
                 Files.write(path, lines, StandardCharsets.UTF_8);//Write all the lines in the files
 
             } catch (Exception e) {

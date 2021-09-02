@@ -22,8 +22,7 @@ public class ShippingServices
     ConsumerEventsForShipping consumerEventsForShipping;
     DbShipping dbShipping;
 
-    public ShippingServices()
-    {
+    public ShippingServices() throws IOException {
         this.dbShipping = new DbShipping();
     }
 

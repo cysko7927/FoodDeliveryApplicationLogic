@@ -41,3 +41,9 @@ In particolare:
 user.txt viene usato da AuthenticationManager e UserServices
 items.txt and orders.txt vengono usati da OrderServices
 shipment.txt viene usato da ShippingServices
+
+è importante anche modificare i file che iniziano con configDB, essi contengono i path
+dove si trovano i file che faranno da DB è opportuno modificarli nel caso in cui i file scritti sopra
+vengano spostati.
+
+Tutti i config nel caso si abbia i file jar vanno messi sempre nella stessa directory.
