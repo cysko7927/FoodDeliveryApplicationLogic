@@ -4,6 +4,6 @@ anguria,30
 anguria1,20
 anguria2,31
 anguria3,25
-mela,20
+mela,15
 frutto,50
 mela1,50
