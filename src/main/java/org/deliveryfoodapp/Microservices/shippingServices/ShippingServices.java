@@ -52,7 +52,7 @@ public class ShippingServices
 
                     String nickname = record.key();
 
-                    dbShipping.addShipment(nickname,keyOrderAndAddress[0],keyOrderAndAddress[1]);
+                    dbShipping.addShipment(nickname,keyOrderAndAddress[0],keyOrderAndAddress[1]);//Add the shipment to the DB
 
 
                     consumerEventsForShipping.commitState();
@@ -61,7 +61,7 @@ public class ShippingServices
                         .showShippingNotCompleted:
                     // record = key:nickname, value:
 
-                    String allShipment = dbShipping.obtainAllShipmentNotCompleted();
+                    String allShipment = dbShipping.obtainAllShipmentNotCompleted();//Read all the shipment from the DB
 
                     if (allShipment == "Error")
                     {
@@ -70,7 +70,7 @@ public class ShippingServices
                     }
 
                     consumerEventsForShipping.commitState();
-                    producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allShipment);
+                    producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allShipment);//Send all the shipment not completed to the client
                     break;
 
                 case NameOfTopics
@@ -79,8 +79,9 @@ public class ShippingServices
                     String nickShippingMen = record.key();
                     String[] keyAndNick = record.value().split(",");
 
-                    int status = dbShipping.completeAShipment(keyAndNick[0],keyAndNick[1]);
+                    int status = dbShipping.completeAShipment(keyAndNick[0],keyAndNick[1]);//Change the status of the shipment in the DB
 
+                    //Send the result of the operation to the client
                     if (status == 2)
                         producerEventsForShipping.sendRecordForATopic(NameOfTopics.notifyUser,nickShippingMen,"error reading the DB");
                     else if(status == 1)

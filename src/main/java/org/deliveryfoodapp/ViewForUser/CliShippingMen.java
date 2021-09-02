@@ -19,6 +19,7 @@ public class CliShippingMen
         Object[] options = {"Notify a Shipping",
                 "Exit"};
 
+        //Ask to the shipping men to choose a operation
         while (!exit)
         {
             input = JOptionPane.showOptionDialog(frame,
@@ -33,7 +34,7 @@ public class CliShippingMen
             switch (input)
             {
                 case 0:
-                    //CreateOrderView
+                    //Create the gui to notify a shipping not complete
                     CreateNotifyShippingView.showShippingNotCompleteView(nickname);
                     break;
                 case 1:

@@ -17,6 +17,7 @@ public class HandleItemsView
     {
         JFrame frame = new JFrame();
 
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -34,7 +35,7 @@ public class HandleItemsView
         while (!done)
         {
             userProducer.askItem(nickname,"");//Ask the items from the Server
-            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all the items and quantity
 
             if (!eventsOfNotify.isEmpty())
             {
@@ -51,6 +52,7 @@ public class HandleItemsView
 
         }
 
+        //Closes the Producer and Consumer to interact with the brokers of kafka
         destroyManagers(nickname);
 
 
@@ -106,6 +108,7 @@ public class HandleItemsView
 
         quantity = Integer.parseInt(s); //Save quantity
 
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -124,7 +127,7 @@ public class HandleItemsView
 
         eventsOfNotify = userConsumer.readEventsOfNotify(); //Wait the items of the Warehouse updated
 
-        if (!eventsOfNotify.isEmpty())//If the response is not arrived
+        if (!eventsOfNotify.isEmpty())//If the response is  arrived
         {
             for (ConsumerRecord<String, String> record: eventsOfNotify) //Check the arrived records
             {
@@ -157,9 +160,10 @@ public class HandleItemsView
 
         }
 
-
+        //Closes the Producer and Consumer to interact with the brokers of kafka
         destroyManagers(nickname);
 
+        //Prints the result of operation
         JOptionPane.showMessageDialog(frame,
                     "Message:"+"\n" + message);
 

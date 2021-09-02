@@ -18,6 +18,8 @@ public class CreateNotifyShippingView
     public static void showShippingNotCompleteView(String nickname)
     {
         JFrame frame = new JFrame();
+
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -35,8 +37,8 @@ public class CreateNotifyShippingView
 
         while (!done)
         {
-            userProducer.askShippingNotCompleted(nickname,"");//Ask the items from the Server
-            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+            userProducer.askShippingNotCompleted(nickname,"");//Ask the shipping to notify from the Server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all the shipping
 
             if (!eventsOfNotify.isEmpty())
             {
@@ -54,6 +56,7 @@ public class CreateNotifyShippingView
 
         }
 
+        //Close the Producer and Consumer for now
         destroyManagers(nickname);
 
         String[] selectedShipping = new String[2];
@@ -64,6 +67,7 @@ public class CreateNotifyShippingView
                 int selected = GuiForNotifyView.askIndexShippingToNotify(1,allShippingNotCompleted.length,message);//Print the Shipping not notified from the server
                 selectedShipping = allShippingNotCompleted[selected-1].split(","); //And ask at the user to select a shipping
 
+                //Creates the Producer and Consumer to interact with the brokers of kafka
                 try {
                     createsManagers(nickname);
                 } catch (Exception e) {
@@ -85,6 +89,7 @@ public class CreateNotifyShippingView
                     }
 
                 }
+                //Closes the Producer and Consumer to interact with the brokers of kafka
                 destroyManagers(nickname);
 
                 JOptionPane.showMessageDialog(frame,

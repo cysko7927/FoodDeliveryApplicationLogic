@@ -19,7 +19,7 @@ public class CliAdmin {
                 "Exit"};
         JFrame frame = new JFrame();
 
-
+        //Ask to the user to choose a operation
         while (!exit)
         {
             input = JOptionPane.showOptionDialog(frame,

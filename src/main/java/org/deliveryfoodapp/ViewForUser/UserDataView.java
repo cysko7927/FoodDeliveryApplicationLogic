@@ -18,6 +18,7 @@ public class UserDataView {
     {
         JFrame frame = new JFrame();
 
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -34,8 +35,8 @@ public class UserDataView {
 
         while (!done)
         {
-            userProducer.askUserData(nickname,"");//Ask the items from the Server
-            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+            userProducer.askUserData(nickname,"");//Ask the data from the Server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with the data of the user
 
             if (!eventsOfNotify.isEmpty())
             {
@@ -52,6 +53,7 @@ public class UserDataView {
 
         }
 
+        //Closes the Producer and Consumer to interact with the brokers of kafka
         destroyManagers(nickname);
 
 
@@ -66,6 +68,7 @@ public class UserDataView {
     {
         JFrame frame = new JFrame();
 
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -79,12 +82,12 @@ public class UserDataView {
         String message = "";
         boolean done = false;
         ConsumerRecords<String, String> eventsOfNotify = null;
-        String address = InputReader.obtainAnAddress();
+        String address = InputReader.obtainAnAddress();//Ask to the user the new address
 
         while (!done)
         {
-            userProducer.sendAddressCustomer(nickname,address);//Ask the items from the Server
-            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+            userProducer.sendAddressCustomer(nickname,address);//Send the address to the server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with the response
 
             if (!eventsOfNotify.isEmpty())
             {
@@ -104,6 +107,7 @@ public class UserDataView {
 
         destroyManagers(nickname);
 
+        //Show result operation
         JOptionPane.showMessageDialog(frame,
                 "Message"+"\n" + message);
     }

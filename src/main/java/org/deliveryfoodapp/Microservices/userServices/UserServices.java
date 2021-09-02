@@ -72,15 +72,15 @@ public class UserServices
                 case NameOfTopics.updateAddressShippingUser:
                     //The record is like: key: nickname value: address
 
-                    int outcome = dbUser.updateAddressShipping(record.key(),record.value());
+                    int outcome = dbUser.updateAddressShipping(record.key(),record.value());//Write the address in the DB
 
-                    if (outcome == 1)
+                    if (outcome == 1)//If there were errors
                     {
-                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Error in the server");
+                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Error in the server");//Send a string of error
                     }
                     else
                     {
-                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Address added correctly");
+                        producerEventsForUser.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),"Address added correctly");//Send a Confirmation string
                     }
 
                     break;

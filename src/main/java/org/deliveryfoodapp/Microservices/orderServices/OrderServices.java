@@ -51,7 +51,7 @@ public class OrderServices {
                 case NameOfTopics
                         .orderCreation:
                     //The record is like: key: nickname value:address\nitem1,quantity\nitem2,quantity\n.....
-                    //Controllare se gli item sono disponibili
+                    //Check if the items are available
                     String nickuser = record.key();
                     boolean orderIsValid = true;
 
@@ -71,20 +71,20 @@ public class OrderServices {
 
                     if (!orderIsValid)//If the order is not valid
                     {
-                        //Mandare messaggio di errore all'utente
+                        // Send error message to user
                         producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,nickuser,"A quantity of a product is not valid");
 
                         break;//Interrupt the proccessing for this record
                     }
 
-                    //Validifica e salva ordine nel DB
+                    // Validate and save the order in the DB
 
                     for (int i = 1; i< lines.length;i++) //Reduce the quantity of the items from the magazine
                     {
                         String[] itemAndQuantity = lines[i].split(",");
                         int quantity = dbItem.obtainQuantity(itemAndQuantity[0]); //Obtain quantity in the Warehouse
 
-                        dbItem.modifyQuantity(itemAndQuantity[0],quantity - Integer.parseInt(itemAndQuantity[1]));
+                        dbItem.modifyQuantity(itemAndQuantity[0],quantity - Integer.parseInt(itemAndQuantity[1]));//Modify quantity
                     }
 
                     int keyOrder = dbOrder.addOrder(record.value().replace("\n",","), nickuser); //Write the order in the DB
@@ -105,7 +105,7 @@ public class OrderServices {
                 case NameOfTopics.updateQuantityItem://If a Admin asked to update the quantity of a item
                     //the record is like this: key:nickname value:item,quantity
 
-                    //Aggiorna quantità item nel DB degli item
+                    // Update item quantity in the item DB
                     String[] itemAndQuantity = record.value().split(",");//Split item and quantity
 
                     dbItem.modifyQuantity(itemAndQuantity[0], Integer.parseInt(itemAndQuantity[1]));
@@ -118,13 +118,13 @@ public class OrderServices {
                         break;
                     }
 
-                    //Crea evento notifyUser con gli item aggiornati
+                    // Create notifyUser event with updated items
                     producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser,record.key(),allItem);
                     break;
                 case NameOfTopics.showOrder: //if a customer asked to see his order
                     //The record is like: key: nickname value:
 
-                    //Crea Evento notifyUser con tutti gli ordini dello user che ha fatto richiesta nel vedere i suoi ordini
+                    // Create Event notifyUser with all orders of the user who requested to see his orders
 
                     String allOrders = dbOrder.obtainAllOrdersOfAUser(record.key());
 
@@ -146,13 +146,14 @@ public class OrderServices {
                         break;
                     }
 
-                    //Else
+                    //Else send the result of the operation
                     producerEventsForOrder.sendRecordForATopic(NameOfTopics.notifyUser, record.key(), allItem1);
                     break;
 
                 case NameOfTopics.notifyCompletedShipping:
                     //Record: key=keyOrder,value = nickCustomer
 
+                    //Change the status of the order in the DB
                     dbOrder.changeStateOrder(record.key(), record.value());
 
                     break;

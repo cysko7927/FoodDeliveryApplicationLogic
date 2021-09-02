@@ -5,3 +5,6 @@
 5,cysko,Completed,Viale Giuseppe 123,pera,5,
 6,cysko,Completed,Viale fratelli 100,apple,5,
 7,cysko,Completed,Viale fratelli 100,anguria,5,
+8,cysko,notDelivered,Viale brescia 1001,pera,5,
+9,cysko,Completed,Viale brescia 1001,pera,5,
+10,cysko,Completed,Viale brescia 1001,anguria,5,

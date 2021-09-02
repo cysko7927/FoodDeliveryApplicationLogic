@@ -10,9 +10,6 @@ import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-/**
- * todo: put the check address shipping in the order Creation
- */
 
 public class CreateOrderView
 {
@@ -21,7 +18,7 @@ public class CreateOrderView
     static public void executeOrderViewCreation(String nickname)
     {
         JFrame frame = new JFrame();
-
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (ExecutionException e) {
@@ -58,8 +55,8 @@ public class CreateOrderView
 
         while (!done)
         {
-            userProducer.askItem(nickname,"");//Ask the orders from the Server
-            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all orders
+            userProducer.askItem(nickname,"");//Ask the items from the Server
+            eventsOfNotify = userConsumer.readEventsOfNotify(); //Reads the record with all items
 
             if (!eventsOfNotify.isEmpty())
             {
@@ -77,7 +74,7 @@ public class CreateOrderView
 
         }
 
-        destroyManagers(nickname);//Free the resource for now
+        destroyManagers(nickname);//Close the producer and consumer for now
 
         if (message.equals("A quantity of a product is not valid"))
         {
@@ -89,7 +86,7 @@ public class CreateOrderView
 
         allItems = obtainAllItemsAndQuantity(message);
 
-
+        //Create the string to print with all the item and quantity
         done = false;
         String allitemString = "";
         int quantityItem;
@@ -99,23 +96,25 @@ public class CreateOrderView
 
         Map<String,Integer> itemsForOrder = new HashMap<>();
 
+        //Ask to the user the items and the quantity to put in the order
+        // If the user insert 0 => Stop to choose items
         while (!done)
         {
-            int chosen = InputReader.readIntBeetween(0,allItems.length,allitemString);
+            int chosen = InputReader.readIntBeetween(0,allItems.length,allitemString); //Ask to the user the item to put in the order
 
-            if (chosen == 0 && itemsForOrder.equals(""))
+            if (chosen == 0 && itemsForOrder.equals("")) //If there aren't item chosen
             {
                 JOptionPane.showMessageDialog(frame,
                         "no Item selected impossible to terminate");
             }
-            else if(chosen== 0)
+            else if(chosen== 0) //If there are items chosen
             {
                 done = true;
             }
             else
             {
                 String item = allItems[chosen-1][0];
-                quantityItem = InputReader.readIntGreaterOrEqualOf1();
+                quantityItem = InputReader.readIntGreaterOrEqualOf1(); //Ask to the user the quantity of the item chosen
 
                 if (itemsForOrder.containsKey(item))//If the item is already inside the order
                 {
@@ -125,16 +124,18 @@ public class CreateOrderView
                 }
                 else
                 {
+                    //Else put the item and quantity in the order
                     itemsForOrder.put(item,quantityItem);
-                    allItems[chosen-1][1] = String.valueOf(Integer.parseInt(allItems[chosen-1][1]) - quantityItem);
+                    allItems[chosen-1][1] = String.valueOf(Integer.parseInt(allItems[chosen-1][1]) - quantityItem); //Update the quantity
                 }
 
                 allitemString = "";
                 for (int i = 0;i< allItems.length;i++)
-                    allitemString = allitemString +allItems[i][0] + "," + allItems[i][1] + "\n";
+                    allitemString = allitemString +allItems[i][0] + "," + allItems[i][1] + "\n";//Update the string with all the items to show to the user
             }
         }
 
+        //Creates the string with the all items and quantity in the order
         String itemsForOrderString = "";
 
         for (String item:new ArrayList<>(itemsForOrder.keySet()))
@@ -144,7 +145,7 @@ public class CreateOrderView
 
         try
         {
-            createsManagers(nickname); //Starts again the manager
+            createsManagers(nickname); //Starts again the Producer and Consumer
         }
         catch (Exception e) {
             destroyManagers(nickname);
@@ -173,10 +174,14 @@ public class CreateOrderView
 
     }
 
+    /**
+     * This method handles the gui that shows the Order history
+     */
     static public void executeOrdersView(String nickname)
     {
         JFrame frame = new JFrame();
 
+        //Creates the Producer and Consumer to interact with the brokers of kafka
         try {
             createsManagers(nickname);
         } catch (Exception e) {
@@ -210,11 +215,11 @@ public class CreateOrderView
                 }
             }
         }
-
+        //Close the Producer and Consumer to interact with the brokers of kafka
         destroyManagers(nickname);
 
         JOptionPane.showMessageDialog(frame,
-                "Here there are your orders:" +"\n" + message);
+                "Here there are your orders:" +"\n" + message);//Show orders
 
     }
 
@@ -251,7 +256,7 @@ public class CreateOrderView
         if (dataUser.length == 4) //If there is the address
             return dataUser[3];//returns it
 
-        return "";
+        return ""; //Else return empty string
     }
 
     private static void createsManagers(String nickname) throws ExecutionException, InterruptedException//Create producer, consumers and Topic Manager
@@ -267,6 +272,7 @@ public class CreateOrderView
         userConsumer.closeConsumer();
     }
 
+    //Creates a matrix that contains name of the item and quantity of all the items available
     private static String[][] obtainAllItemsAndQuantity(String allItems)
     {
         String[] allItemsVector = allItems.split(System.getProperty("line.separator"));

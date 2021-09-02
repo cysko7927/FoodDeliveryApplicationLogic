@@ -2,6 +2,9 @@ package org.deliveryfoodapp.ViewForUser;
 
 import javax.swing.*;
 
+/**
+ * This class handles the GUI with the MainMenu of a customer
+ */
 public class CliCustomer
 {
 
@@ -22,7 +25,7 @@ public class CliCustomer
                 "Show your data",
                 "Set your Address",
                 "Exit"};
-
+        //Ask to the customer to choose a operation
         while (!exit)
         {
             input = JOptionPane.showOptionDialog(frame,
@@ -37,15 +40,15 @@ public class CliCustomer
             switch (input)
             {
                 case 0:
-                    //CreateOrderView
+                    //Create the Gui to make an order with the CreateOrderView
                     CreateOrderView.executeOrderViewCreation(nickname);
                     break;
                 case 1:
-                    //Shows orders with the CreateOrderView
+                    //Shows orders done by user with the CreateOrderView
                     CreateOrderView.executeOrdersView(nickname);
                     break;
                 case 2:
-                    //Show data User
+                    //Show data User(Nick,password,Address)
                     UserDataView.showUserDataView(nickname);
                     break;
                 case 3:

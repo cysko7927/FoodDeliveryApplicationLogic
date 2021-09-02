@@ -21,6 +21,7 @@ public class ViewCli
 
         while (!finish)
         {
+            //Ask to the user to choose a operation
             int op = JOptionPane.showOptionDialog(frame,
                     "Choose a operation",
                     "Welcome User ",
@@ -30,7 +31,7 @@ public class ViewCli
                     options,
                     options[2]);
 
-            switch (op)
+            switch (op) //check the choose of the user
             {
                 case 0:
                     RegisterUser.registerUser();

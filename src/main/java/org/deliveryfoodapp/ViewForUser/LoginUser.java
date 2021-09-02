@@ -3,6 +3,10 @@ package org.deliveryfoodapp.ViewForUser;
 import javax.swing.*;
 import java.io.IOException;
 
+/**
+ * This Class handles the GUI for the login of the user
+ *
+ */
 public class LoginUser {
     private static String username = "";
     private static String password = "";
@@ -13,6 +17,7 @@ public class LoginUser {
         JFrame frame = new JFrame();
         String input;
 
+        //Ask the nick to the user
         input = (String) JOptionPane.showInputDialog(
                 frame,
                 "Insert the nickname",
@@ -22,10 +27,13 @@ public class LoginUser {
                 null,
                 "");
 
+        if (input == null)
+            return;
+
         username = new String(input);
 
 
-
+        //Ask the password to the user
         input = (String) JOptionPane.showInputDialog(
                 frame,
                 "insert the password",
@@ -35,6 +43,8 @@ public class LoginUser {
                 null,
                 "");
 
+        if (input == null)
+            return;
         password = new String(input);
 
         LoginHandler clientLogin = new LoginHandler();
@@ -42,7 +52,7 @@ public class LoginUser {
         String response;
         try
         {
-            response = clientLogin.startClient(username,password);
+            response = clientLogin.startClient(username,password); //Send the credentials to the authentication Manager
 
         } catch (IOException e)
         {
@@ -52,24 +62,24 @@ public class LoginUser {
         }
 
 
-        switch(response)
+        switch(response) //Check the response
         {
             case "DENIED":
                 JOptionPane.showMessageDialog(frame,"Wrong credentials");
                 break;
             case "CUSTOMER":
                 System.out.println("Welcome customer " + username);
-                //Create Cli for Customer
+                //Create GUI for Customer
                 CliCustomer.cliCustomer(username);
                 break;
             case "SHIPPINGMEN":
                 System.out.println("Welcome Shipping men " + username);
-                //Create Cli for ShippingMen
+                //Create GUI for ShippingMen
                 CliShippingMen.cliShippingMen(username);
                 break;
             case "ADMIN":
                 System.out.println("Welcome Admin " + username);
-                //Create Cli for Admin
+                //Create GUI for Admin
                 CliAdmin.cliAdmin(username);
                 break;
             default:

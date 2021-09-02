@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class main
 {
     public static void main(String[] args) throws IOException {
-        //Reading and set the address for the brokers
+        //Reading and set the address for the brokers from the File config.txt
         List<String> servers = Files.lines(Paths.get("./config.txt")).collect(Collectors.toList());
         NetworkBroker.server0 = servers.get(0).split("=")[1];
         NetworkBroker.server1 = servers.get(1).split("=")[1];
@@ -23,6 +23,8 @@ public class main
 
 
         ViewCli.mainMenu();
+
+        System.exit(0);
 
     }
 
